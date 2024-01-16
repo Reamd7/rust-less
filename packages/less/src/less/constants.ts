@@ -4,10 +4,10 @@ export const Math = {
     PARENS_DIVISION: 1,
     PARENS: 2
     // removed - STRICT_LEGACY: 3
-};
+} as const;
 
 export const RewriteUrls = {
     OFF: 0,
     LOCAL: 1,
     ALL: 2
-};
+} as const;
