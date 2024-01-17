@@ -1,24 +1,24 @@
 import AbstractFileManager from '../less/environment/abstract-file-manager.js';
+import type { Logger } from '../less/logger'
 
-let options;
-let logger;
+let options: { isFileProtocol: any; fileAsync: any; };
+let logger: Logger;
 let fileCache = {};
 
 // TODOS - move log somewhere. pathDiff and doing something similar in node. use pathDiff in the other browser file for the initial load
-const FileManager = function() {}
-FileManager.prototype = Object.assign(new AbstractFileManager(), {
+class FileManager extends AbstractFileManager {
     alwaysMakePathsAbsolute() {
         return true;
-    },
+    }
 
-    join(basePath, laterPath) {
+    join(basePath: string, laterPath: string) {
         if (!basePath) {
             return laterPath;
         }
         return this.extractUrlParts(laterPath, basePath).path;
-    },
+    }
 
-    doXHR(url, type, callback, errback) {
+    doXHR(url: string | URL, type: any, callback: { (data: any, lastModified: any): void; (arg0: string): void; } errback: { (status: any, url: any): void; (arg0: number, arg1: any): void; }) {
         const xhr = new XMLHttpRequest();
         const async = options.isFileProtocol ? options.fileAsync : true;
 
@@ -30,7 +30,7 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
         xhr.setRequestHeader('Accept', type || 'text/x-less, text/css; q=0.9, */*; q=0.5');
         xhr.send(null);
 
-        function handleResponse(xhr, callback, errback) {
+        function handleResponse(xhr: XMLHttpRequest, callback: (arg0: any, arg1: any) => void, errback: (arg0: any, arg1: any) => void) {
             if (xhr.status >= 200 && xhr.status < 300) {
                 callback(xhr.responseText,
                     xhr.getResponseHeader('Last-Modified'));
@@ -54,17 +54,17 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
         } else {
             handleResponse(xhr, callback, errback);
         }
-    },
+    }
 
     supports() {
         return true;
-    },
+    }
 
     clearFileCache() {
         fileCache = {};
-    },
+    }
 
-    loadFile(filename, currentDirectory, options) {
+    loadFile(filename: string, currentDirectory: null, options: { ext?: any; useFileCache?: any; mime?: any; }) {
         // TODO: Add prefix support like less-node?
         // What about multiple paths?
 
@@ -92,20 +92,20 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
                 }
             }
 
-            self.doXHR(href, options.mime, function doXHRCallback(data, lastModified) {
+            self.doXHR(href, options.mime, function doXHRCallback(data: any, lastModified: any) {
                 // per file cache
                 fileCache[href] = data;
 
                 // Use remote copy (re-parse)
                 resolve({ contents: data, filename: href, webInfo: { lastModified }});
-            }, function doXHRError(status, url) {
+            } function doXHRError(status: any, url: any) {
                 reject({ type: 'File', message: `'${url}' wasn't found (${status})`, href });
             });
         });
     }
-});
+}
 
-export default (opts, log) => {
+export default (opts: any, log: Logger) => {
     options = opts;
     logger = log;
     return FileManager;

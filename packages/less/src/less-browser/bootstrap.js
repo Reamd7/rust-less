@@ -7,16 +7,21 @@ import defaultOptions from '../less/default-options';
 import addDefaultOptions from './add-default-options';
 import root from './index';
 
-const options = defaultOptions();
+const options = addDefaultOptions(
+    window, 
+    (() => {
+        const options = defaultOptions();
 
-if (window.less) {
-    for (const key in window.less) {
-        if (Object.prototype.hasOwnProperty.call(window.less, key)) {
-            options[key] = window.less[key];
+        if (window.less) {
+            for (const key in window.less) {
+                if (Object.prototype.hasOwnProperty.call(window.less, key)) {
+                    options[key] = window.less[key];
+                }
+            }
         }
-    }
-}
-addDefaultOptions(window, options);
+        return options
+    })()
+);
 
 options.plugins = options.plugins || [];
 

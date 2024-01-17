@@ -1,7 +1,9 @@
 import {addDataAttr} from './utils';
 import browser from './browser';
+import type { LessOptions } from '../less/default-options';
+import { BrowserOption } from './browserOption';
 
-export default (window, options) => {
+export default (window: Window, options: LessOptions & Partial<Omit<BrowserOption, keyof LessOptions>>) => {
 
     // use options from the current script tag data attribues
     addDataAttr(options, browser.currentScript(window));
@@ -32,7 +34,7 @@ export default (window, options) => {
 
     const dumpLineNumbers = /!dumpLineNumbers:(comments|mediaquery|all)/.exec(window.location.hash);
     if (dumpLineNumbers) {
-        options.dumpLineNumbers = dumpLineNumbers[1];
+        options.dumpLineNumbers = dumpLineNumbers[1] as 'comments' | "mediaquery" | 'all';
     }
 
     if (options.useFileCache === undefined) {
@@ -46,4 +48,6 @@ export default (window, options) => {
     if (options.relativeUrls) {
         options.rewriteUrls = 'all';
     }
+
+    return options as BrowserOption
 };

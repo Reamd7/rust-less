@@ -1,5 +1,38 @@
+export type LessOptions = {
+    paths: string[];
+    rootpath: string;
+    rewriteUrls: 'off' |'all' | 'local' | false;
+    // math: "always" | "parens-division" | "parens" | "strict" | "strict-legacy";
+    math: 0 | 1 | 2 | 3;
+    strictUnits: boolean;
+    ieCompat?: boolean;
+    javascriptEnabled: boolean;
+    globalVars: Record<string, string> | null;
+    modifyVars: Record<string, string> | null;
+    urlArgs: string;
+    dumpLineNumbers?: 'comments' | 'mediaquery' | 'all';
+    lint: boolean;
+    compress?: boolean;
+    insecure: boolean;
+    depends: boolean;
+    color: boolean;
+    strictImports: boolean;
+    plugins: unknown[]
+    
+    sourceMap?: {
+        outputFilename: string;
+        sourceMapRootpath: string;
+        sourceMapBasepath: string;
+        outputSourceFiles: boolean;
+        sourceMapFileInline: boolean;
+        sourceMapURL: string;
+
+    };
+
+    isFileProtocol?: boolean;
+}
 // Export a new default each time
-export default function() {
+export default function(): LessOptions {
     return {
         /* Inline Javascript - @plugin still allowed */
         javascriptEnabled: false,
@@ -65,6 +98,8 @@ export default function() {
         modifyVars: null,
 
         /* This option allows you to specify a argument to go on to every URL.  */
-        urlArgs: ''
+        urlArgs: '',
+
+        plugins: [],
     }
 }

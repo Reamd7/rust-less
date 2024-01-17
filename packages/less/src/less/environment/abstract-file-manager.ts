@@ -1,5 +1,5 @@
-class AbstractFileManager {
-    getPath(filename) {
+abstract class AbstractFileManager {
+    getPath(filename: string) {
         let j = filename.lastIndexOf('?');
         if (j > 0) {
             filename = filename.slice(0, j);
@@ -14,11 +14,11 @@ class AbstractFileManager {
         return filename.slice(0, j + 1);
     }
 
-    tryAppendExtension(path, ext) {
+    tryAppendExtension(path: string, ext: string) {
         return /(\.[a-z]*$)|([?;].*)$/.test(path) ? path : path + ext;
     }
 
-    tryAppendLessExtension(path) {
+    tryAppendLessExtension(path: string) {
         return this.tryAppendExtension(path, '.less');
     }
 
@@ -30,19 +30,19 @@ class AbstractFileManager {
         return false;
     }
 
-    isPathAbsolute(filename) {
+    isPathAbsolute(filename: string) {
         return (/^(?:[a-z-]+:|\/|\\|#)/i).test(filename);
     }
 
     // TODO: pull out / replace?
-    join(basePath, laterPath) {
+    join(basePath: string, laterPath: string) {
         if (!basePath) {
             return laterPath;
         }
         return basePath + laterPath;
     }
 
-    pathDiff(url, baseUrl) {
+    pathDiff(url: string, baseUrl: string) {
         // diff between two paths to create a relative path
 
         const urlParts = this.extractUrlParts(url);
@@ -78,7 +78,7 @@ class AbstractFileManager {
      * @param {string} url 
      * @param {string} baseUrl
      */
-    extractUrlParts(url, baseUrl) {
+    extractUrlParts(url: string, baseUrl?: string) {
         // urlParts[1] = protocol://hostname/ OR /
         // urlParts[2] = / if path relative to host base
         // urlParts[3] = directories
@@ -88,8 +88,7 @@ class AbstractFileManager {
         const urlPartsRegex = /^((?:[a-z-]+:)?\/{2}(?:[^/?#]*\/)|([/\\]))?((?:[^/\\?#]*[/\\])*)([^/\\?#]*)([#?].*)?$/i;
 
         const urlParts = url.match(urlPartsRegex);
-        const returner = {};
-        let rawDirectories = [];
+        let rawDirectories: string[] = [];
         const directories = [];
         let i;
         let baseUrlParts;
@@ -125,14 +124,18 @@ class AbstractFileManager {
             
             }
         }
-
-        returner.hostPart = urlParts[1];
-        returner.directories = directories;
-        returner.rawPath = (urlParts[1] || '') + rawDirectories.join('/');
-        returner.path = (urlParts[1] || '') + directories.join('/');
-        returner.filename = urlParts[4];
-        returner.fileUrl = returner.path + (urlParts[4] || '');
-        returner.url = returner.fileUrl + (urlParts[5] || '');
+        
+        const path = (urlParts[1] || '') + directories.join('/')
+        const fileUrl = path + (urlParts[4] || '')
+        const returner = {
+            hostPart: urlParts[1],
+            directories,
+            rawPath: (urlParts[1] || '') + rawDirectories.join('/'),
+            path,
+            filename: urlParts[4],
+            fileUrl,
+            url: fileUrl + (urlParts[5] || '')
+        };
         return returner;
     }
 }

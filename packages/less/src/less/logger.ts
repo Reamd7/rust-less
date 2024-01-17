@@ -48,5 +48,5 @@ class LoggerIns {
         }
     }
 }
-
+export type Logger = InstanceType<typeof LoggerIns>
 export default new LoggerIns
