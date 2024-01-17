@@ -1,3 +1,4 @@
+/** @type {typeof import('fs')} */
 let fs;
 try
 {

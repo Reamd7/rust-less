@@ -2,24 +2,50 @@ import path from 'path';
 import fs from './fs';
 import AbstractFileManager from '../less/environment/abstract-file-manager.js';
 
-const FileManager = function() {}
-FileManager.prototype = Object.assign(new AbstractFileManager(), {
+type Options = {
+    paths?: string[]
+    prefixes?: string[];
+    syncImport?: boolean;
+    ext?: string;
+    rawBuffer?: boolean;
+}
+
+type LoadFileCb = (
+    error: {
+        type: 'File',
+        message: string
+    } | undefined,
+    result: {
+        contents: string | Buffer,
+        filename: string
+    }
+) => unknown
+
+class FileManager extends AbstractFileManager {
     supports() {
         return true;
-    },
+    }
 
     supportsSync() {
         return true;
-    },
+    }
 
-    loadFile(filename, currentDirectory, options, environment, callback) {
-        let fullFilename;
+    loadFile = (filename: string, currentDirectory: string, options: Options, _: unknown, callback?: LoadFileCb) => {
+        let fullFilename: string;
         const isAbsoluteFilename = this.isPathAbsolute(filename);
-        const filenamesTried = [];
+        const filenamesTried: string[] = [];
         const self = this;
         const prefix = filename.slice(0, 1);
         const explicit = prefix === '.' || prefix === '/';
-        let result = null;
+        let result: {
+            contents: string | Buffer,
+            filename: string
+        } | {
+            error: {
+                type: 'File',
+                message: string
+            }
+        } | null = null;
         let isNodeModule = false;
         const npmPrefix = 'npm://';
 
@@ -36,8 +62,13 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
 
         if (options.syncImport) {
             getFileData(returnData, returnData);
-            if (callback) {
-                callback(result.error, result);
+            if (callback && result) {
+                callback(('error' in result) ? (result as {
+                    error: {
+                        type: 'File',
+                        message: string
+                    }
+                }).error : undefined, result);
             }
             else {
                 return result;
@@ -50,8 +81,14 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
             return new Promise(getFileData);
         }
 
-        function returnData(data) {
-            if (!data.filename) {
+        function returnData(data: {
+            contents: string | Buffer,
+            filename: string
+        } | {
+            type: 'File',
+            message: string
+        }) {
+            if (!('filename' in data)) {
                 result = { error: data };
             }
             else {
@@ -59,7 +96,16 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
             }
         }
 
-        function getFileData(fulfill, reject) {
+        function getFileData(
+            fulfill: (result: {
+                contents: string | Buffer,
+                filename: string
+            }) => unknown, 
+            reject: (error: {
+                type: 'File',
+                message: string
+            }) => unknown, 
+        ) {
             (function tryPathIndex(i) {
                 function tryWithExtension() {
                     const extFilename = options.ext ? self.tryAppendExtension(fullFilename, options.ext) : fullFilename;
@@ -84,11 +130,12 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
                             isNodeModule = false;
                             fullFilename = fileParts.rawPath + prefixes[j] + fileParts.filename;
 
-                            if (paths[i]) {
-                                fullFilename = path.join(paths[i], fullFilename);
+                            const item = paths[i]
+                            if (item) {
+                                fullFilename = path.join(item, fullFilename);
                             }
 
-                            if (!explicit && paths[i] === '.') {
+                            if (!explicit && item === '.') {
                                 try {
                                     fullFilename = require.resolve(fullFilename);
                                     isNodeModule = true;
@@ -102,13 +149,13 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
                                 tryWithExtension();
                             }                            
 
-                            const readFileArgs = [fullFilename];
+                            const readFileArgs: Parameters<typeof fs['readFileSync']> = [fullFilename];
                             if (!options.rawBuffer) {
                                 readFileArgs.push('utf-8');
                             }
                             if (options.syncImport) {
                                 try {
-                                    const data = fs.readFileSync.apply(this, readFileArgs);
+                                    const data = fs.readFileSync.apply(fs, readFileArgs);
                                     fulfill({ contents: data, filename: fullFilename});
                                 }
                                 catch (e) {
@@ -117,14 +164,14 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
                                 }
                             }
                             else {
-                                readFileArgs.push(function(e, data) {
+                                (readFileArgs as Parameters<typeof fs['readFile']>).push((e, data) => {
                                     if (e) {
                                         filenamesTried.push(isNodeModule ? npmPrefix + fullFilename : fullFilename);
                                         return tryPrefix(j + 1);
                                     }   
                                     fulfill({ contents: data, filename: fullFilename});
                                 });
-                                fs.readFile.apply(this, readFileArgs);
+                                fs.readFile.apply(fs, (readFileArgs as Parameters<typeof fs['readFile']>));
                             }
 
                         }
@@ -137,12 +184,14 @@ FileManager.prototype = Object.assign(new AbstractFileManager(), {
                 }
             }(0));
         }
-    },
 
-    loadFileSync(filename, currentDirectory, options, environment) {
+        return null
+    }
+
+    loadFileSync(filename: string, currentDirectory: string, options: Options, environment: unknown) {
         options.syncImport = true;
         return this.loadFile(filename, currentDirectory, options, environment);
     }
-});
+}
 
 export default FileManager;

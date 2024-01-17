@@ -105,7 +105,9 @@ abstract class AbstractFileManager {
             }
             urlParts[1] = urlParts[1] || baseUrlParts[1] || '';
             if (!urlParts[2]) {
-                urlParts[3] = baseUrlParts[3] + urlParts[3];
+                if (baseUrlParts[3]) {
+                    urlParts[3] = baseUrlParts[3] + urlParts[3];
+                }
             }
         }
 

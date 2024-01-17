@@ -1,9 +1,10 @@
 import AbstractFileManager from '../less/environment/abstract-file-manager.js';
+import type { BrowserOption } from './browserOption';
 import type { Logger } from '../less/logger'
 
-let options: { isFileProtocol: any; fileAsync: any; };
+let options: BrowserOption;
 let logger: Logger;
-let fileCache = {};
+let fileCache: Record<string, string> = {};
 
 // TODOS - move log somewhere. pathDiff and doing something similar in node. use pathDiff in the other browser file for the initial load
 class FileManager extends AbstractFileManager {
@@ -18,7 +19,7 @@ class FileManager extends AbstractFileManager {
         return this.extractUrlParts(laterPath, basePath).path;
     }
 
-    doXHR(url: string | URL, type: any, callback: { (data: any, lastModified: any): void; (arg0: string): void; } errback: { (status: any, url: any): void; (arg0: number, arg1: any): void; }) {
+    doXHR(url: string, type: string | undefined | null, callback: (responseText: string, responseHeader?: string | null) => unknown, errback: (status: number, url: string) => unknown) {
         const xhr = new XMLHttpRequest();
         const async = options.isFileProtocol ? options.fileAsync : true;
 
@@ -30,10 +31,9 @@ class FileManager extends AbstractFileManager {
         xhr.setRequestHeader('Accept', type || 'text/x-less, text/css; q=0.9, */*; q=0.5');
         xhr.send(null);
 
-        function handleResponse(xhr: XMLHttpRequest, callback: (arg0: any, arg1: any) => void, errback: (arg0: any, arg1: any) => void) {
+        function handleResponse() {
             if (xhr.status >= 200 && xhr.status < 300) {
-                callback(xhr.responseText,
-                    xhr.getResponseHeader('Last-Modified'));
+                callback(xhr.responseText, xhr.getResponseHeader('Last-Modified'));
             } else if (typeof errback === 'function') {
                 errback(xhr.status, url);
             }
@@ -48,11 +48,11 @@ class FileManager extends AbstractFileManager {
         } else if (async) {
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) {
-                    handleResponse(xhr, callback, errback);
+                    handleResponse();
                 }
             };
         } else {
-            handleResponse(xhr, callback, errback);
+            handleResponse();
         }
     }
 
@@ -64,7 +64,7 @@ class FileManager extends AbstractFileManager {
         fileCache = {};
     }
 
-    loadFile(filename: string, currentDirectory: null, options: { ext?: any; useFileCache?: any; mime?: any; }) {
+    loadFile(filename: string, currentDirectory: string | null, options: { ext?: string; useFileCache?: boolean; mime?: string; }) {
         // TODO: Add prefix support like less-node?
         // What about multiple paths?
 
@@ -88,24 +88,30 @@ class FileManager extends AbstractFileManager {
                     const lessText = fileCache[href];
                     return resolve({ contents: lessText, filename: href, webInfo: { lastModified: new Date() }});
                 } catch (e) {
-                    return reject({ filename: href, message: `Error loading file ${href} error was ${e.message}` });
+                    const message = e instanceof Error ? e.message : ''
+                    return reject({ filename: href, message: `Error loading file ${href} error was ${message}` });
                 }
             }
 
-            self.doXHR(href, options.mime, function doXHRCallback(data: any, lastModified: any) {
-                // per file cache
-                fileCache[href] = data;
+            self.doXHR(
+                href, 
+                options.mime, 
+                function doXHRCallback(data, lastModified) {
+                    // per file cache
+                    fileCache[href] = data;
 
-                // Use remote copy (re-parse)
-                resolve({ contents: data, filename: href, webInfo: { lastModified }});
-            } function doXHRError(status: any, url: any) {
-                reject({ type: 'File', message: `'${url}' wasn't found (${status})`, href });
-            });
+                    // Use remote copy (re-parse)
+                    resolve({ contents: data, filename: href, webInfo: { lastModified }});
+                }, 
+                function doXHRError(status, url) {
+                    reject({ type: 'File', message: `'${url}' wasn't found (${status})`, href });
+                }
+            );
         });
     }
 }
 
-export default (opts: any, log: Logger) => {
+export default (opts: BrowserOption, log: Logger) => {
     options = opts;
     logger = log;
     return FileManager;
