@@ -53,9 +53,10 @@
 		"make-dir": "^2.1.0",
 		"mime": "^1.4.1",
 		"needle": "^3.1.0",
-		"source-map": "~0.6.0"
+		"source-map": "^0.7.4"
 	},
 	"devDependencies": {
+		"@types/mime": "^1",
 		"@types/needle": "3.3.0",
 		"@less/test-data": "^4.2.0",
 		"@less/test-import-module": "^4.0.0",
