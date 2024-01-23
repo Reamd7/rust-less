@@ -1,9 +1,10 @@
-import environment from './environment';
+import NodeEnvironment from './NodeEnvironment';
 import FileManager from './file-manager';
 import UrlFileManager from './url-file-manager';
 import createFromEnvironment from '../less';
-const less = createFromEnvironment(environment, [new FileManager(), new UrlFileManager()]);
 import lesscHelper from './lessc-helper';
+
+const less = createFromEnvironment(new NodeEnvironment([new FileManager(), new UrlFileManager()]));
 
 // allow people to create less with their own environment
 less.createFromEnvironment = createFromEnvironment;

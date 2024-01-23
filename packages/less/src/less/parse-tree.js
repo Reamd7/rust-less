@@ -2,7 +2,7 @@ import LessError from './less-error';
 import transformTree from './transform-tree';
 import logger from './logger';
 
-export default function(SourceMapBuilder) {
+export default function ParseTreeFactory(SourceMapBuilder) {
     class ParseTree {
         constructor(root, imports) {
             this.root = root;

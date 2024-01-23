@@ -11,10 +11,11 @@ import LogListener from './log-listener';
 import ErrorReporting from './error-reporting';
 import Cache from './cache';
 import ImageSize from './image-size';
+import BrowserEnvironment from './BrowserEnvironment';
 
 export default (window, options) => {
     const document = window.document;
-    const less = lessRoot();
+    const less = lessRoot(new BrowserEnvironment());
 
     less.options = options;
     const environment = less.environment;

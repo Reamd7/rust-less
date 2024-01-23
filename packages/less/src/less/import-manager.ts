@@ -3,8 +3,9 @@ import Parser from './parser/parser';
 import LessError from './less-error';
 import * as utils from './utils';
 import logger from './logger';
+import Environment from './environment/environment';
 
-export default function(environment) {
+export default function ImportManagerFactory(environment: Environment) {
     // FileInfo = {
     //  'rewriteUrls' - option - whether to adjust URL's to be relative
     //  'filename' - full resolved filename of current file

@@ -1,9 +1,9 @@
-import { LessOptions } from "../less/default-options";
+import { LessOptions } from '../less/default-options';
 
 export type BrowserOption = {
     async: boolean; // default: false
     env: string;
-    errorReporting: "html" | "console" | "function"; // html
+    errorReporting: 'html' | 'console' | 'function'; // html
     fileAsync: boolean; // false
 
     /**

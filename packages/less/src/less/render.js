@@ -1,6 +1,6 @@
 import * as utils from './utils';
 
-export default function(environment, ParseTree) {
+export default function RenderFactory(environment, ParseTree) {
     const render = function (input, options, callback) {
         if (typeof options === 'function') {
             callback = options;

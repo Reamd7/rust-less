@@ -16,29 +16,41 @@ type LoadFileCb = (
         message: string
     } | undefined,
     result: {
-        contents: string | Buffer,
+        contents: string | Uint8Array,
         filename: string
-    }
+    } | null
 ) => unknown
 
 class FileManager extends AbstractFileManager {
-    supports() {
+    supports(): boolean {
         return true;
     }
 
-    supportsSync() {
+    supportsSync(): boolean {
         return true;
     }
 
-    loadFile = (filename: string, currentDirectory: string, options: Options, _: unknown, callback?: LoadFileCb) => {
+    private _loadFileCallback = (filename: string, currentDirectory: string, options: Options, _: unknown, callback?: LoadFileCb): Promise<{
+        contents: string | Uint8Array;
+        filename: string;
+    }> | {
+        contents: string | Uint8Array,
+        filename: string
+    } | {
+        error: {
+            type: 'File',
+            message: string
+        }
+    } | null =>  {
         let fullFilename: string;
         const isAbsoluteFilename = this.isPathAbsolute(filename);
         const filenamesTried: string[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
         const prefix = filename.slice(0, 1);
         const explicit = prefix === '.' || prefix === '/';
         let result: {
-            contents: string | Buffer,
+            contents: string | Uint8Array,
             filename: string
         } | {
             error: {
@@ -53,7 +65,9 @@ class FileManager extends AbstractFileManager {
 
         const paths = isAbsoluteFilename ? [''] : [currentDirectory];
 
-        if (options.paths) { paths.push.apply(paths, options.paths); }
+        if (options.paths) {
+            paths.push(...options.paths);
+        }
 
         if (!isAbsoluteFilename && paths.indexOf('.') === -1) { paths.push('.'); }
 
@@ -62,8 +76,8 @@ class FileManager extends AbstractFileManager {
 
         if (options.syncImport) {
             getFileData(returnData, returnData);
-            if (callback && result) {
-                callback(('error' in result) ? (result as {
+            if (callback) {
+                callback( result && ('error' in result) ? (result as {
                     error: {
                         type: 'File',
                         message: string
@@ -82,7 +96,7 @@ class FileManager extends AbstractFileManager {
         }
 
         function returnData(data: {
-            contents: string | Buffer,
+            contents: string | Uint8Array,
             filename: string
         } | {
             type: 'File',
@@ -98,13 +112,13 @@ class FileManager extends AbstractFileManager {
 
         function getFileData(
             fulfill: (result: {
-                contents: string | Buffer,
+                contents: string | Uint8Array,
                 filename: string
-            }) => unknown, 
+            }) => unknown,
             reject: (error: {
                 type: 'File',
                 message: string
-            }) => unknown, 
+            }) => unknown,
         ) {
             (function tryPathIndex(i) {
                 function tryWithExtension() {
@@ -125,7 +139,7 @@ class FileManager extends AbstractFileManager {
                     }
                 }
                 if (i < paths.length) {
-                    (function tryPrefix(j) {
+                    (function tryPrefix(j): void {
                         if (j < prefixes.length) {
                             isNodeModule = false;
                             fullFilename = fileParts.rawPath + prefixes[j] + fileParts.filename;
@@ -147,7 +161,7 @@ class FileManager extends AbstractFileManager {
                             }
                             else {
                                 tryWithExtension();
-                            }                            
+                            }
 
                             const readFileArgs: Parameters<typeof fs['readFileSync']> = [fullFilename];
                             if (!options.rawBuffer) {
@@ -155,7 +169,7 @@ class FileManager extends AbstractFileManager {
                             }
                             if (options.syncImport) {
                                 try {
-                                    const data = fs.readFileSync.apply(fs, readFileArgs);
+                                    const data = fs.readFileSync(...readFileArgs);
                                     fulfill({ contents: data, filename: fullFilename});
                                 }
                                 catch (e) {
@@ -168,10 +182,10 @@ class FileManager extends AbstractFileManager {
                                     if (e) {
                                         filenamesTried.push(isNodeModule ? npmPrefix + fullFilename : fullFilename);
                                         return tryPrefix(j + 1);
-                                    }   
+                                    }
                                     fulfill({ contents: data, filename: fullFilename});
                                 });
-                                fs.readFile.apply(fs, (readFileArgs as Parameters<typeof fs['readFile']>));
+                                fs.readFile(...(readFileArgs as Parameters<typeof fs['readFile']>));
                             }
 
                         }
@@ -188,9 +202,20 @@ class FileManager extends AbstractFileManager {
         return null
     }
 
-    loadFileSync(filename: string, currentDirectory: string, options: Options, environment: unknown) {
-        options.syncImport = true;
-        return this.loadFile(filename, currentDirectory, options, environment);
+    loadFile = (filename: string, currentDirectory: string, options: Options, _: unknown, callback?: LoadFileCb): Promise<{
+        contents: string | Uint8Array;
+        filename: string;
+    }> =>  {
+        (options as Options).syncImport = false;
+        return this._loadFileCallback(filename, currentDirectory, options, _, callback) as Promise<{
+            contents: string | Uint8Array;
+            filename: string;
+        }>
+    }
+
+    loadFileSync(filename: string, currentDirectory: string, options: Omit<Options, 'syncImport'>, _: unknown): { error?: unknown, filename: string, contents: string } {
+        (options as Options).syncImport = true;
+        return this.loadFile(filename, currentDirectory, options, _) as any as { error?: unknown, filename: string, contents: string };
     }
 }
 

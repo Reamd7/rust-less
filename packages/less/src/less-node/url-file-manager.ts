@@ -10,11 +10,16 @@ import logger from '../less/logger';
 const isUrlRe = /^(?:https?:)?\/\//i;
 
 class UrlFileManager extends AbstractFileManager {
-    supports(filename: string, currentDirectory: string) {
+
+
+    supports(filename: string, currentDirectory: string): boolean {
         return isUrlRe.test( filename ) || isUrlRe.test(currentDirectory);
     }
 
-    loadFile(filename: string, currentDirectory: string) {
+    loadFile(filename: string, currentDirectory: string): Promise<{
+        contents: string;
+        filename: string;
+    }> {
         return new Promise((fulfill, reject) => {
             // if (request === undefined) {
             //     try { request = require('needle'); }
@@ -25,7 +30,7 @@ class UrlFileManager extends AbstractFileManager {
             //     return;
             // }
 
-            let urlStr = isUrlRe.test( filename ) ? filename : url.resolve(currentDirectory, filename);
+            const urlStr = isUrlRe.test( filename ) ? filename : url.resolve(currentDirectory, filename);
 
             /** native-request currently has a bug */
             const hackUrlStr = urlStr.indexOf('?') === -1 ? urlStr + '?' : urlStr
@@ -49,6 +54,13 @@ class UrlFileManager extends AbstractFileManager {
                 fulfill({ contents: body || '', filename: urlStr });
             });
         });
+    }
+
+    supportsSync(): boolean {
+        return false
+    }
+    loadFileSync(): { error?: unknown; filename: string; contents: string; } {
+        throw new Error('Method not implemented.');
     }
 }
 

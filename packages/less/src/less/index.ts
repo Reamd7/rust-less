@@ -12,26 +12,23 @@ import transformTree from './transform-tree';
 import * as utils from './utils';
 import PluginManager from './plugin-manager';
 import logger from './logger';
-import SourceMapOutput from './source-map-output';
-import SourceMapBuilder from './source-map-builder';
-import ParseTree from './parse-tree';
-import ImportManager from './import-manager';
-import Parse from './parse';
-import Render from './render';
+import SourceMapOutputFactory from './source-map-output';
+import SourceMapBuilderFactory from './source-map-builder';
+import ParseTreeFactory from './parse-tree';
+import ImportManagerFactory from './import-manager';
+import ParseFactory from './parse';
+import RenderFactory from './render';
 import { version } from '../../package.json';
 import parseVersion from 'parse-node-version';
 
-export default function(environment, fileManagers) {
-    let sourceMapOutput, sourceMapBuilder, parseTree, importManager;
+export default function(environment: Environment) {
+    const sourceMapOutput = SourceMapOutputFactory(environment);
+    const sourceMapBuilder = SourceMapBuilderFactory(sourceMapOutput, environment);
+    const parseTree = ParseTreeFactory(sourceMapBuilder);
+    const importManager = ImportManagerFactory(environment);
 
-    environment = new Environment(environment, fileManagers);
-    sourceMapOutput = SourceMapOutput(environment);
-    sourceMapBuilder = SourceMapBuilder(sourceMapOutput, environment);
-    parseTree = ParseTree(sourceMapBuilder);
-    importManager = ImportManager(environment);
-
-    const render = Render(environment, parseTree, importManager);
-    const parse = Parse(environment, parseTree, importManager);
+    const render = RenderFactory(environment, parseTree);
+    const parse = ParseFactory(environment, parseTree, importManager);
 
     const v = parseVersion(`v${version}`);
     const initial = {
@@ -64,6 +61,7 @@ export default function(environment, fileManagers) {
     const ctor = function(t) {
         return function() {
             const obj = Object.create(t.prototype);
+            // eslint-disable-next-line prefer-rest-params
             t.apply(obj, Array.prototype.slice.call(arguments, 0));
             return obj;
         };
@@ -88,7 +86,7 @@ export default function(environment, fileManagers) {
     /**
      * Some of the functions assume a `this` context of the API object,
      * which causes it to fail when wrapped for ES6 imports.
-     * 
+     *
      * An assumed `this` should be removed in the future.
      */
     initial.parse = initial.parse.bind(api);

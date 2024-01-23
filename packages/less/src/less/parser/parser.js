@@ -2281,22 +2281,22 @@ const Parser = function Parser(context, imports, fileInfo, currentIndex) {
                             op = '>';
                         }
                     } else
-                    if (parserInput.$char('<')) {
-                        if (parserInput.$char('=')) {
-                            op = '<=';
-                        } else {
-                            op = '<';
-                        }
-                    } else
-                    if (parserInput.$char('=')) {
-                        if (parserInput.$char('>')) {
-                            op = '=>';
-                        } else if (parserInput.$char('<')) {
-                            op = '=<';
-                        } else {
-                            op = '=';
-                        }
-                    }
+                        if (parserInput.$char('<')) {
+                            if (parserInput.$char('=')) {
+                                op = '<=';
+                            } else {
+                                op = '<';
+                            }
+                        } else
+                            if (parserInput.$char('=')) {
+                                if (parserInput.$char('>')) {
+                                    op = '=>';
+                                } else if (parserInput.$char('<')) {
+                                    op = '=<';
+                                } else {
+                                    op = '=';
+                                }
+                            }
                     if (op) {
                         b = cond();
                         if (b) {

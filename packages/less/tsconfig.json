@@ -24,7 +24,8 @@
     "useUnknownInCatchVariables": true,
     "exactOptionalPropertyTypes": true,
     "strict": true,
-    "target": "ES5"
+    "target": "ES5",
+    "resolveJsonModule": true
   },
   "ts-node": {
     "compilerOptions": {

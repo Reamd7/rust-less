@@ -1,7 +1,11 @@
-export default function (environment) {
+import Environment from './environment/environment';
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export default function SourceMapOutputFactory(environment: Environment) {
     class SourceMapOutput {
+        private _css: string[] = []
         constructor(options) {
-            this._css = [];
+            // this._css = [];
             this._rootNode = options.rootNode;
             this._contentsMap = options.contentsMap;
             this._contentsIgnoredCharsMap = options.contentsIgnoredCharsMap;
@@ -39,20 +43,20 @@ export default function (environment) {
             return path;
         }
 
-        normalizeFilename(filename) {
+        normalizeFilename(filename: string) {
             filename = filename.replace(/\\/g, '/');
             filename = this.removeBasepath(filename);
             return (this._sourceMapRootpath || '') + filename;
         }
 
-        add(chunk, fileInfo, index, mapLines) {
+        add(chunk: string, fileInfo, index, mapLines) {
 
             // ignore adding empty strings
             if (!chunk) {
                 return;
             }
 
-            let lines, sourceLines, columns, sourceColumns, i;
+            let sourceLines, sourceColumns, i;
 
             if (fileInfo && fileInfo.filename) {
                 let inputSource = this._contentsMap[fileInfo.filename];
@@ -66,7 +70,7 @@ export default function (environment) {
                     inputSource = inputSource.slice(this._contentsIgnoredCharsMap[fileInfo.filename]);
                 }
 
-                /** 
+                /**
                  * ignore empty content, or failsafe
                  * if contents map is incorrect
                  */
@@ -80,8 +84,8 @@ export default function (environment) {
                 sourceColumns = sourceLines[sourceLines.length - 1];
             }
 
-            lines = chunk.split('\n');
-            columns = lines[lines.length - 1];
+            const lines = chunk.split('\n');
+            const columns = lines[lines.length - 1];
 
             if (fileInfo && fileInfo.filename) {
                 if (!mapLines) {

@@ -34,7 +34,7 @@ export default (window: Window, options: LessOptions & Partial<Omit<BrowserOptio
 
     const dumpLineNumbers = /!dumpLineNumbers:(comments|mediaquery|all)/.exec(window.location.hash);
     if (dumpLineNumbers) {
-        options.dumpLineNumbers = dumpLineNumbers[1] as 'comments' | "mediaquery" | 'all';
+        options.dumpLineNumbers = dumpLineNumbers[1] as 'comments' | 'mediaquery' | 'all';
     }
 
     if (options.useFileCache === undefined) {

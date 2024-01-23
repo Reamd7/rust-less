@@ -19,7 +19,7 @@ class FileManager extends AbstractFileManager {
         return this.extractUrlParts(laterPath, basePath).path;
     }
 
-    doXHR(url: string, type: string | undefined | null, callback: (responseText: string, responseHeader?: string | null) => unknown, errback: (status: number, url: string) => unknown) {
+    private doXHR(url: string, type: string | undefined | null, callback: (responseText: string, responseHeader?: string | null) => unknown, errback: (status: number, url: string) => unknown) {
         const xhr = new XMLHttpRequest();
         const async = options.isFileProtocol ? options.fileAsync : true;
 
@@ -64,7 +64,13 @@ class FileManager extends AbstractFileManager {
         fileCache = {};
     }
 
-    loadFile(filename: string, currentDirectory: string | null, options: { ext?: string; useFileCache?: boolean; mime?: string; }) {
+    loadFile(filename: string, currentDirectory: string | null, options: { ext?: string; useFileCache?: boolean; mime?: string; }): Promise<{
+        contents: string;
+        filename: string;
+        webInfo: {
+            lastModified: Date | null | string | undefined
+        }
+    }> {
         // TODO: Add prefix support like less-node?
         // What about multiple paths?
 
@@ -80,13 +86,15 @@ class FileManager extends AbstractFileManager {
         // some context variables for imports
         const hrefParts = this.extractUrlParts(filename, window.location.href);
         const href      = hrefParts.url;
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self      = this;
-        
+
         return new Promise((resolve, reject) => {
             if (options.useFileCache && fileCache[href]) {
                 try {
                     const lessText = fileCache[href];
-                    return resolve({ contents: lessText, filename: href, webInfo: { lastModified: new Date() }});
+                    // !!!
+                    return resolve({ contents: lessText!, filename: href, webInfo: { lastModified: new Date() }});
                 } catch (e) {
                     const message = e instanceof Error ? e.message : ''
                     return reject({ filename: href, message: `Error loading file ${href} error was ${message}` });
@@ -94,24 +102,31 @@ class FileManager extends AbstractFileManager {
             }
 
             self.doXHR(
-                href, 
-                options.mime, 
+                href,
+                options.mime,
                 function doXHRCallback(data, lastModified) {
                     // per file cache
                     fileCache[href] = data;
 
                     // Use remote copy (re-parse)
                     resolve({ contents: data, filename: href, webInfo: { lastModified }});
-                }, 
+                },
                 function doXHRError(status, url) {
                     reject({ type: 'File', message: `'${url}' wasn't found (${status})`, href });
                 }
             );
         });
     }
+
+    supportsSync(): boolean {
+        return false;
+    }
+    loadFileSync(): { error?: unknown; filename: string; contents: string; } {
+        throw Error('loadFileSync has not impl')
+    }
 }
 
-export default (opts: BrowserOption, log: Logger) => {
+export default (opts: BrowserOption, log: Logger): typeof FileManager => {
     options = opts;
     logger = log;
     return FileManager;

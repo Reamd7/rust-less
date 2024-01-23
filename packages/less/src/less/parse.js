@@ -4,7 +4,7 @@ import PluginManager from './plugin-manager';
 import LessError from './less-error';
 import * as utils from './utils';
 
-export default function(environment, ParseTree, ImportManager) {
+export default function ParseFactory(environment, ParseTree, ImportManager) {
     const parse = function (input, options, callback) {
 
         if (typeof options === 'function') {

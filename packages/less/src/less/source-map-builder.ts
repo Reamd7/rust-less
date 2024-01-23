@@ -1,4 +1,8 @@
-export default function (SourceMapOutput, environment) {
+import Environment from './environment/environment';
+import SourceMapOutputFactory from './source-map-output'
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export default function SourceMapBuilderFactory(SourceMapOutput: ReturnType<typeof SourceMapOutputFactory>, environment: Environment) {
     class SourceMapBuilder {
         constructor(options) {
             this.options = options;
@@ -17,7 +21,7 @@ export default function (SourceMapOutput, environment) {
                     sourceMapRootpath: this.options.sourceMapRootpath,
                     outputSourceFiles: this.options.outputSourceFiles,
                     sourceMapGenerator: this.options.sourceMapGenerator,
-                    sourceMapFileInline: this.options.sourceMapFileInline,    
+                    sourceMapFileInline: this.options.sourceMapFileInline,
                     disableSourcemapAnnotation: this.options.disableSourcemapAnnotation
                 });
 

@@ -2,7 +2,7 @@
 import * as Constants from './constants';
 import { copy } from 'copy-anything';
 
-export function getLocation(index, inputStream) {
+export function getLocation(index: number, inputStream: string) {
     let n = index + 1;
     let line = null;
     let column = -1;
@@ -21,7 +21,7 @@ export function getLocation(index, inputStream) {
     };
 }
 
-export function copyArray(arr) {
+export function copyArray<T>(arr: T[]) {
     let i;
     const length = arr.length;
     const copy = new Array(length);
@@ -32,14 +32,14 @@ export function copyArray(arr) {
     return copy;
 }
 
-export function clone(obj) {
-    const cloned = {};
+export function clone<T extends Record<string, unknown>>(obj: T) {
+    const cloned: any = {};
     for (const prop in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, prop)) {
             cloned[prop] = obj[prop];
         }
     }
-    return cloned;
+    return cloned as T;
 }
 
 export function defaults(obj1, obj2) {
@@ -98,7 +98,7 @@ export function copyOptions(obj1, obj2) {
     return opts;
 }
 
-export function merge(obj1, obj2) {
+export function merge<T extends Record<string, unknown>, U extends Record<string, unknown>>(obj1: T, obj2: U) {
     for (const prop in obj2) {
         if (Object.prototype.hasOwnProperty.call(obj2, prop)) {
             obj1[prop] = obj2[prop];
@@ -107,7 +107,7 @@ export function merge(obj1, obj2) {
     return obj1;
 }
 
-export function flattenArray(arr, result = []) {
+export function flattenArray<T>(arr: T[], result = []) {
     for (let i = 0, length = arr.length; i < length; i++) {
         const value = arr[i];
         if (Array.isArray(value)) {

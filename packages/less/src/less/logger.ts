@@ -12,7 +12,7 @@ class LoggerIns {
     private _listeners: LoggerListeners[] = [];
     private _fireEvent = (type: MessageType, msg: string) => {
         for (let i = 0; i < this._listeners.length; i++) {
-            const logFunction = this._listeners[i][type];
+            const logFunction = this._listeners[i]?.[type];
             if (logFunction) {
                 logFunction(msg);
             }
