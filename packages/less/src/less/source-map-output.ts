@@ -3,8 +3,17 @@ import Environment from './environment/environment';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function SourceMapOutputFactory(environment: Environment) {
     class SourceMapOutput {
+        private _sourceMapRootpath: string;
+        private _sourceMapBasepath: string | undefined;
         private _css: string[] = []
-        constructor(options) {
+        private _rootNode: unknown;
+        
+        constructor(options: {
+            sourceMapBasepath?: string;
+            sourceMapRootpath?: string;
+            rootNode: unknown; // TODO
+            sourceMapURL?: string
+        }) {
             // this._css = [];
             this._rootNode = options.rootNode;
             this._contentsMap = options.contentsMap;

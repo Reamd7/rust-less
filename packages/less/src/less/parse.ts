@@ -3,8 +3,9 @@ import Parser from './parser/parser';
 import PluginManager from './plugin-manager';
 import LessError from './less-error';
 import * as utils from './utils';
+import type ImportManagerFactory from './import-manager';
 
-export default function ParseFactory(environment, ParseTree, ImportManager) {
+export default function ParseFactory(environment, ParseTree, ImportManager: ReturnType<typeof ImportManagerFactory>) {
     const parse = function (input, options, callback) {
 
         if (typeof options === 'function') {

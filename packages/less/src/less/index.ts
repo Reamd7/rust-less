@@ -32,7 +32,7 @@ export default function(environment: Environment) {
 
     const v = parseVersion(`v${version}`);
     const initial = {
-        version: [v.major, v.minor, v.patch],
+        version: [v.major, v.minor, v.patch] as const,
         data,
         tree,
         Environment,
