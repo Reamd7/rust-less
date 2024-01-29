@@ -1,21 +1,21 @@
 // Split the input into chunks.
-export default function (input, fail) {
+export default function (input: string, fail: (msg: string, index: number) => void) {
     const len = input.length;
     let level = 0;
     let parenLevel = 0;
-    let lastOpening;
-    let lastOpeningParen;
-    let lastMultiComment;
-    let lastMultiCommentEndBrace;
-    const chunks = [];
+    let lastOpening!: number;
+    let lastOpeningParen!: number;
+    let lastMultiComment!: number;
+    let lastMultiCommentEndBrace!: number;
+    const chunks: string[] = [];
     let emitFrom = 0;
-    let chunkerCurrentIndex;
-    let currentChunkStartIndex;
-    let cc;
-    let cc2;
-    let matched;
+    let chunkerCurrentIndex: number;
+    let currentChunkStartIndex: number;
+    let cc: number;
+    let cc2: number;
+    let matched: number;
 
-    function emitChunk(force) {
+    function emitChunk(force?: boolean) {
         const len = chunkerCurrentIndex - emitFrom;
         if (((len < 512) && !force) || !len) {
             return;
@@ -38,7 +38,7 @@ export default function (input, fail) {
                 continue;
             case 41:                        // )
                 if (--parenLevel < 0) {
-                    return fail('missing opening `(`', chunkerCurrentIndex);
+                    throw fail('missing opening `(`', chunkerCurrentIndex);
                 }
                 continue;
             case 59:                        // ;
@@ -50,13 +50,13 @@ export default function (input, fail) {
                 continue;
             case 125:                       // }
                 if (--level < 0) {
-                    return fail('missing opening `{`', chunkerCurrentIndex);
+                    throw fail('missing opening `{`', chunkerCurrentIndex);
                 }
                 if (!level && !parenLevel) { emitChunk(); }
                 continue;
             case 92:                        // \
                 if (chunkerCurrentIndex < len - 1) { chunkerCurrentIndex++; continue; }
-                return fail('unescaped `\\`', chunkerCurrentIndex);
+                throw fail('unescaped `\\`', chunkerCurrentIndex);
             case 34:
             case 39:
             case 96:                        // ", ' and `
@@ -68,13 +68,13 @@ export default function (input, fail) {
                     if (cc2 == cc) { matched = 1; break; }
                     if (cc2 == 92) {        // \
                         if (chunkerCurrentIndex == len - 1) {
-                            return fail('unescaped `\\`', chunkerCurrentIndex);
+                            throw fail('unescaped `\\`', chunkerCurrentIndex);
                         }
                         chunkerCurrentIndex++;
                     }
                 }
                 if (matched) { continue; }
-                return fail(`unmatched \`${String.fromCharCode(cc)}\``, currentChunkStartIndex);
+                throw fail(`unmatched \`${String.fromCharCode(cc)}\``, currentChunkStartIndex);
             case 47:                        // /, check for comment
                 if (parenLevel || (chunkerCurrentIndex == len - 1)) { continue; }
                 cc2 = input.charCodeAt(chunkerCurrentIndex + 1);
@@ -94,14 +94,14 @@ export default function (input, fail) {
                         if (input.charCodeAt(chunkerCurrentIndex + 1) == 47) { break; }
                     }
                     if (chunkerCurrentIndex == len - 1) {
-                        return fail('missing closing `*/`', currentChunkStartIndex);
+                        throw fail('missing closing `*/`', currentChunkStartIndex);
                     }
                     chunkerCurrentIndex++;
                 }
                 continue;
             case 42:                       // *, check for unmatched */
                 if ((chunkerCurrentIndex < len - 1) && (input.charCodeAt(chunkerCurrentIndex + 1) == 47)) {
-                    return fail('unmatched `/*`', chunkerCurrentIndex);
+                    throw fail('unmatched `/*`', chunkerCurrentIndex);
                 }
                 continue;
         }
@@ -109,12 +109,12 @@ export default function (input, fail) {
 
     if (level !== 0) {
         if ((lastMultiComment > lastOpening) && (lastMultiCommentEndBrace > lastMultiComment)) {
-            return fail('missing closing `}` or `*/`', lastOpening);
+            throw fail('missing closing `}` or `*/`', lastOpening);
         } else {
-            return fail('missing closing `}`', lastOpening);
+            throw fail('missing closing `}`', lastOpening);
         }
     } else if (parenLevel !== 0) {
-        return fail('missing closing `)`', lastOpeningParen);
+        throw fail('missing closing `)`', lastOpeningParen);
     }
 
     emitChunk(true);

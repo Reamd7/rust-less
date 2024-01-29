@@ -1593,7 +1593,9 @@ const Parser = function Parser(context, imports, fileInfo, currentIndex) {
              * First, it will try to parse comments and entities to reach
              * the end. This is mostly like the Expression parser except no
              * math is allowed.
-             */
+             * 
+             * @param {RegExp | undefined} untilTokens
+              */
             permissiveValue: function (untilTokens) {
                 let i;
                 let e;
