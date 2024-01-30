@@ -27,13 +27,12 @@ export default function(environment, ParseTree, ImportManager) {
                 });
             });
         } else {
-            let context;
             let rootFileInfo;
             const pluginManager = new PluginManager(this, !options.reUsePluginManager);
 
             options.pluginManager = pluginManager;
 
-            context = new contexts.Parse(options);
+            const context = new contexts.Parse(options);
 
             if (options.rootFileInfo) {
                 rootFileInfo = options.rootFileInfo;
